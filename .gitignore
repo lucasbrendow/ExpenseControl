@@ -399,3 +399,10 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+dist/
+build/
+.env
+.env.local
+.env.development
+.env.production
