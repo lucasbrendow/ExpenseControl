@@ -16,6 +16,7 @@ namespace ExpenseControl.Api.Controllers
             _contexto = contexto;
         }
 
+        // GET: api/categorias - Listagem de todas as categorias
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Categoria>>> Listar()
         {
@@ -23,6 +24,7 @@ namespace ExpenseControl.Api.Controllers
             return Ok(categorias);
         }
 
+        // POST: api/categorias - Criação de nova categoria
         [HttpPost]
         public async Task<ActionResult<Categoria>> Criar(Categoria categoria)
         {

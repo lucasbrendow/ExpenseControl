@@ -16,6 +16,7 @@ namespace ExpenseControl.Api.Controllers
             _contexto = contexto;
         }
 
+        // GET: api/pessoa - Listagem de todas as pessoas
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Pessoa>>> Listar()
         {
@@ -23,6 +24,7 @@ namespace ExpenseControl.Api.Controllers
             return Ok(pessoas);
         }
 
+        // GET: api/pessoa/{id} - Obter detalhes de uma pessoa específica
         [HttpGet("{id}")]
         public async Task<ActionResult<Pessoa>> Obter(int id)
         {
@@ -34,6 +36,7 @@ namespace ExpenseControl.Api.Controllers
             return Ok(pessoa);
         }
 
+        // POST: api/pessoa - Criação de nova pessoa
         [HttpPost]
         public async Task<ActionResult<Pessoa>> Criar(Pessoa pessoa)
         {
@@ -43,6 +46,7 @@ namespace ExpenseControl.Api.Controllers
             return CreatedAtAction(nameof(Obter), new { id = pessoa.Id }, pessoa);
         }
 
+        // PUT: api/pessoa/{id} - Atualização de pessoa existente
         [HttpPut("{id}")]
         public async Task<ActionResult> Atualizar(int id, Pessoa pessoa)
         {
@@ -55,6 +59,7 @@ namespace ExpenseControl.Api.Controllers
             return NoContent();
         }
 
+        // DELETE: api/pessoa/{id} - Exclusão de pessoa
         [HttpDelete("{id}")]
         public async Task<ActionResult> Excluir(int id)
         {
@@ -69,12 +74,11 @@ namespace ExpenseControl.Api.Controllers
             return NoContent();
         }
 
-
+        // GET: api/pessoa/totais - Obter totais de receitas, despesas e saldo para cada pessoa
         [HttpGet("totais")]
         public async Task<ActionResult> ObterTotais()
         {
-            
-        var pessoas = await _contexto.Pessoas.ToListAsync();
+            var pessoas = await _contexto.Pessoas.ToListAsync();
 
             var resultado = new List<object>();
 
