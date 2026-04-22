@@ -85,25 +85,32 @@ namespace ExpenseControl.Api.Controllers
             decimal totalReceitasGeral = 0;
             decimal totalDespesasGeral = 0;
 
+            // Calcula, para cada pessoa, o total de receitas, despesas e saldo
             foreach (var pessoa in pessoas)
             {
+                // Obtém todas as transações da pessoa
                 var transacoes = await _contexto.Transacoes
                     .Where(t => t.PessoaId == pessoa.Id)
                     .ToListAsync();
 
+                // Calcula o total de receitas para a pessoa
                 var receitas = transacoes
                     .Where(t => t.Tipo == "Receita")
                     .Sum(t => t.Valor);
 
+                // Calcula o total de despesas para a pessoa
                 var despesas = transacoes
                     .Where(t => t.Tipo == "Despesa")
                     .Sum(t => t.Valor);
 
+                // Calcula o saldo (receitas - despesas)
                 var saldo = receitas - despesas;
 
+                // Acumula os totais gerais
                 totalReceitasGeral += receitas;
-                totalDespesasGeral += despesas;
+                totalDespesasGeral += despesas;                
 
+                // Adiciona os totais da pessoa ao resultado
                 resultado.Add(new
                 {
                     pessoa.Id,
@@ -114,6 +121,7 @@ namespace ExpenseControl.Api.Controllers
                 });
             }
 
+            // Calcula totais gerais
             var totalGeral = new
             {
                 TotalReceitas = totalReceitasGeral,
@@ -121,6 +129,7 @@ namespace ExpenseControl.Api.Controllers
                 Saldo = totalReceitasGeral - totalDespesasGeral
             };
 
+            // Retorna o resultado com os totais por pessoa e o total geral
             return Ok(new
             {
                 Pessoas = resultado,

@@ -33,9 +33,16 @@ function App() {
       </header>
 
       <main className="app-content">
-        {telaAtual === "inicio" && <Inicio />}
-        {telaAtual === "cadastros" && <Cadastros />}
+        <div className="container">
+          {telaAtual === "inicio" && <Inicio />}
+          {telaAtual === "cadastros" && <Cadastros />}
+        </div>
       </main>
+
+      <footer className="app-footer">
+        <span></span>
+        <span>© {new Date().getFullYear()} - ExpenseControl</span>
+      </footer>
     </div>
   );
 }

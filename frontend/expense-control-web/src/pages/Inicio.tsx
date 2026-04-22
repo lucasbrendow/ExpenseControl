@@ -2,17 +2,26 @@ import { useEffect, useState } from "react";
 import { api } from "../services/api";
 
 function Inicio() {
+
+  // Estados para armazenar transações, totais, pessoas, categorias, campos do formulário e erros
   const [transacoes, setTransacoes] = useState<any[]>([]);
   const [totais, setTotais] = useState<any>(null);
   const [pessoas, setPessoas] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
-
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [tipo, setTipo] = useState("Despesa");
   const [pessoaId, setPessoaId] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
   const [modalTransacaoAberta, setModalTransacaoAberta] = useState(false);
+  const [erros, setErros] = useState<any>({});
+  const [erroMenorReceita, setErroMenorReceita] = useState("");
+
+  // Filtra as categorias com base no tipo selecionado (Despesa, Receita ou Ambas):
+  const categoriasFiltradas = categorias.filter((c) => {
+    if (c.finalidade === "Ambas") return true;
+    return c.finalidade === tipo;
+  });
 
   useEffect(() => {
   carregarTransacoes();
@@ -20,6 +29,7 @@ function Inicio() {
   carregarPessoas();
   carregarCategorias();
   }, []);
+
 
   async function carregarTransacoes() {
     try {
@@ -56,9 +66,45 @@ function Inicio() {
     }
   }
 
-  // Função para agilizar o registro de uma transação diretamente na tela inicial
-  async function criarTransacaoRapida(event: React.FormEvent) {
+  function calcularIdade(dataNascimento: string) {
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const m = hoje.getMonth() - nascimento.getMonth();
+
+    if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--;
+    }
+
+    return idade;
+  } 
+
+  // Função para agilizar o registro de uma transaçao diretamente na tela inicial:
+  async function criarTransacaoRapida(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const novosErros: any = {};
+
+    // Tratamento de erros, se campos estiverem vazios ou não selecionados, então exibe a mensagem de erro:
+    if (!descricao) novosErros.descricao = "Descrição é obrigatória";
+    if (!valor || Number(valor) <= 0) novosErros.valor = "Valor deve ser maior que zero";
+    if (!pessoaId) novosErros.pessoaId = "Selecione uma pessoa";
+    if (!categoriaId) novosErros.categoriaId = "Selecione uma categoria";
+
+    if (Object.keys(novosErros).length > 0) {
+      setErros(novosErros);
+      return;
+    }
+
+    // Verificação adicional para impedir registro de receita de menores de idade:
+    if (erroMenorReceita) {
+      return;
+    }
+
+    setErros({});
+    setErroMenorReceita("");
+
 
     try {
       await api.post("/transacoes", {
@@ -69,6 +115,7 @@ function Inicio() {
         categoriaId: Number(categoriaId)
       });
 
+      // Limpa os campos e fecha o modal após criar a transação:
       setDescricao("");
       setValor("");
       setTipo("Despesa");
@@ -78,12 +125,13 @@ function Inicio() {
 
       await carregarTransacoes();
       await carregarTotais();
-    } catch (error) {
-      console.error("Erro ao criar transação", error);
-      alert("Não foi possível criar a transação.");
+    } catch (error: any) {
+      const mensagem = error?.response?.data || "Erro ao criar transação.";
+      alert(mensagem);
     }
   }
 
+  
   return (
     <div className="cards-coluna">
       <section className="card">
@@ -98,7 +146,7 @@ function Inicio() {
           <div className="modal-overlay">
             <div className="modal">
               <div className="modal-cabecalho">
-                <h3>Transação Rápida</h3>
+                <h3>Transação</h3>
                 <button
                   type="button"
                   className="botao-fechar"
@@ -114,7 +162,9 @@ function Inicio() {
                   placeholder="Descrição"
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
+                  className={erros.descricao ? "input-erro" : ""}
                 />
+                {erros.descricao && <span className="erro-texto">{erros.descricao}</span>}
 
                 <input
                   type="number"
@@ -122,14 +172,50 @@ function Inicio() {
                   placeholder="Valor"
                   value={valor}
                   onChange={(e) => setValor(e.target.value)}
+                  className={erros.valor ? "input-erro" : ""}
                 />
+                {erros.valor && <span className="erro-texto">{erros.valor}</span>}
 
-                <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
+                <select value={tipo} onChange={(e) => {
+                  const novoTipo = e.target.value;
+                  setTipo(novoTipo);
+
+                  if (pessoaId) {
+                    const pessoaSelecionada = pessoas.find(p => p.id === Number(pessoaId));
+
+                    if (pessoaSelecionada) {
+                      const idade = calcularIdade(pessoaSelecionada.dataNascimento);
+
+                      if (idade < 18 && novoTipo === "Receita") {
+                        setErroMenorReceita("Menores de idade não podem gerar receita");
+                        return;
+                      }
+                    }
+                  }
+
+                  setErroMenorReceita("");
+                }} className={erroMenorReceita ? "input-erro" : ""}>
                   <option value="Despesa">Despesa</option>
                   <option value="Receita">Receita</option>
                 </select>
 
-                <select value={pessoaId} onChange={(e) => setPessoaId(e.target.value)}>
+                <select value={pessoaId} onChange={(e) => {
+                  const novaPessoaId = e.target.value;
+                  setPessoaId(novaPessoaId);
+
+                  const pessoaSelecionada = pessoas.find(p => p.id === Number(novaPessoaId));
+
+                  if (pessoaSelecionada) {
+                    const idade = calcularIdade(pessoaSelecionada.dataNascimento);
+
+                    if (idade < 18 && tipo === "Receita") {
+                      setErroMenorReceita("Menores de idade não podem gerar receita");
+                      return;
+                    }
+                  }
+
+                  setErroMenorReceita("");
+                }} className={erros.pessoaId ? "input-erro" : ""}>
                   <option value="">Selecione uma pessoa</option>
                   {pessoas.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -137,17 +223,24 @@ function Inicio() {
                     </option>
                   ))}
                 </select>
+                {erros.pessoaId && <span className="erro-texto">{erros.pessoaId}</span>}
 
-                <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
+                <select
+                  value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className={erros.categoriaId ? "input-erro" : ""}>
                   <option value="">Selecione uma categoria</option>
-                  {categorias.map((c) => (
+                  {categoriasFiltradas.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.descricao} ({c.finalidade})
+                      {c.descricao}
                     </option>
                   ))}
                 </select>
-
+                {erros.categoriaId && <span className="erro-texto">{erros.categoriaId}</span>}
                 <button type="submit">Registrar transação</button>
+                {erroMenorReceita && (
+                  <span className="erro-texto" style={{ marginTop: "8px", display: "block" }}>
+                    {erroMenorReceita}
+                  </span>
+                )}
               </form>
             </div>
           </div>

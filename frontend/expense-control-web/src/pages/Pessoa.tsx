@@ -3,16 +3,20 @@ import { criarPessoa, listarPessoa } from "../services/pessoaService";
 import type { Pessoa } from "../types/Pessoa";
 
 export default function Pessoa() {
+
+  // Estdos para armazenar a lista de pessoas e os campos do formulário
   const [pessoas, setPessoa] = useState<Pessoa[]>([]);
   const [nome, setNome] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
 
+  // Função para carregar a lista de pessoas do backend
   const carregarPessoa = async () => {
     const data = await listarPessoa();
     setPessoa(data);
   };
 
-  const salvar = async (e: React.FormEvent) => {
+  // Função para criar uma nova pessoa, com tratamento de erros para campos vazios
+  const salvar = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     await criarPessoa({

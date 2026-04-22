@@ -16,6 +16,7 @@ namespace ExpenseControl.Api.Controllers
             _contexto = contexto;
         }
 
+        // GET: api/transacoes - Lista todas as transações
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Transacao>>> Listar()
         {
@@ -27,9 +28,10 @@ namespace ExpenseControl.Api.Controllers
             return Ok(transacoes);
         }
 
+        // POST: api/transacoes - Cria uma nova transação
         [HttpPost]
         public async Task<ActionResult> Criar(Transacao transacao)
-        {
+        {   
             if (transacao.Valor <= 0)
                 return BadRequest("O valor da transação deve ser maior que zero.");
 
@@ -55,6 +57,7 @@ namespace ExpenseControl.Api.Controllers
             return Ok(transacao);
         }
 
+        // Método auxiliar para calcular a idade a partir da data de nascimento
         private static int CalcularIdade(DateTime dataNascimento)
         {
             var hoje = DateTime.Today;
@@ -66,6 +69,7 @@ namespace ExpenseControl.Api.Controllers
             return idade;
         }
 
+        // Método auxiliar para verificar se a categoria aceita o tipo da transação
         private static bool CategoriaAceitaTipoTransacao(string finalidadeCategoria, string tipoTransacao)
         {
             if (finalidadeCategoria == "Ambas")
