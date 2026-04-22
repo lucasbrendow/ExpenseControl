@@ -127,6 +127,7 @@ function Inicio() {
 
       await carregarTransacoes();
       await carregarTotais();
+      await carregarTotaisCategoria();
     } catch (error: any) {
       const mensagem = error?.response?.data || "Erro ao criar transação.";
       alert(mensagem);
