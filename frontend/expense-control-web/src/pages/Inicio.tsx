@@ -16,6 +16,7 @@ function Inicio() {
   const [modalTransacaoAberta, setModalTransacaoAberta] = useState(false);
   const [erros, setErros] = useState<any>({});
   const [erroMenorReceita, setErroMenorReceita] = useState("");
+  const [totaisCategoria, setTotaisCategoria] = useState<any>(null);
 
   // Filtra as categorias com base no tipo selecionado (Despesa, Receita ou Ambas):
   const categoriasFiltradas = categorias.filter((c) => {
@@ -28,6 +29,7 @@ function Inicio() {
   carregarTotais();
   carregarPessoas();
   carregarCategorias();
+  carregarTotaisCategoria();
   }, []);
 
 
@@ -131,8 +133,18 @@ function Inicio() {
     }
   }
 
+  // Função para carregar os totais de receitas e despesas por categoria:
+  async function carregarTotaisCategoria() {
+    try {
+      const response = await api.get("/categorias/totais-por-categoria");
+      setTotaisCategoria(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar totais por categoria", error);
+    }
+  }
+
   
-  return (
+  return (    
     <div className="cards-coluna">
       <section className="card">
         <div className="secao-cabecalho">
@@ -301,6 +313,40 @@ function Inicio() {
           </>
         ) : (
           <div className="lista-vazia">Nenhum total disponível.</div>
+        )}
+      </section>
+
+      <section className="card">
+        <h3 className="secao-titulo">Totais por Categoria</h3>
+
+        {totaisCategoria && totaisCategoria.categorias.length > 0 ? (
+          <>
+            <ul className="lista-apresentavel">
+              {totaisCategoria.categorias.map((c: any) => (
+                <li key={c.id} className="lista-item">
+                  <div className="lista-item-info">
+                    <span className="lista-item-titulo">{c.descricao}</span>
+                    <span className="lista-item-descricao">
+                      Receitas: R$ {Number(c.receitas).toFixed(2)} |
+                      Despesas: R$ {Number(c.despesas).toFixed(2)} |
+                      Saldo: R$ {Number(c.saldo).toFixed(2)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div style={{ marginTop: "16px" }}>
+              <strong>Total Geral</strong>
+              <div>
+                Receitas: R$ {Number(totaisCategoria.totalGeral.totalReceitas).toFixed(2)} |
+                Despesas: R$ {Number(totaisCategoria.totalGeral.totalDespesas).toFixed(2)} |
+                Saldo: R$ {Number(totaisCategoria.totalGeral.saldo).toFixed(2)}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="lista-vazia">Nenhum dado disponível.</div>
         )}
       </section>
     </div>
